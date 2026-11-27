@@ -6,6 +6,8 @@ odoo.define("stock_barcodes.KanbanRenderer", function (require) {
     const BasicController = require("web.BasicController");
     const KanbanRenderer = require("web.KanbanRenderer");
     const BarcodesModelsMixin = require("stock_barcodes.BarcodesModelsMixin");
+    // Ensure BasicController is patched before delegating key events from kanban cards.
+    require("stock_barcodes.BasicController");
 
     KanbanRenderer.include(BarcodesModelsMixin);
     KanbanRenderer.include({
@@ -32,16 +34,15 @@ odoo.define("stock_barcodes.KanbanRenderer", function (require) {
          * @override
          */
         _onRecordKeyDown: function (ev) {
-            if (
-                this._is_valid_barcode_model &&
-                this._controller_base &&
-                this._controller_base._onDocumentKeyDown
-            ) {
-                ev.stopPropagation();
-                this._controller_base._onDocumentKeyDown(ev);
-            } else {
-                this._super.apply(this, arguments);
+            if (this._is_valid_barcode_model && this._controller_base) {
+                const handler = this._controller_base._onDocumentKeyDown;
+                if (handler) {
+                    ev.stopPropagation();
+                    handler.call(this._controller_base, ev);
+                    return;
+                }
             }
+            this._super.apply(this, arguments);
         },
     });
 });

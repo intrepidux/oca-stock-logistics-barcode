@@ -6,6 +6,7 @@ odoo.define("stock_barcodes.web_widget_numeric_step.field", function (require) {
     const BasicController = require("web.BasicController");
     const NumericStep = require("web_widget_numeric_step.field");
     const BarcodesModelsMixin = require("stock_barcodes.BarcodesModelsMixin");
+    require("stock_barcodes.BasicController");
 
     NumericStep.include(BarcodesModelsMixin);
     NumericStep.include({
@@ -30,14 +31,19 @@ odoo.define("stock_barcodes.web_widget_numeric_step.field", function (require) {
          * @override
          */
         _onKeyDown: function (ev) {
-            if (this._is_valid_barcode_model && ev.keyCode === $.ui.keyCode.ENTER) {
-                if (this._controller_base) {
+            if (
+                this._is_valid_barcode_model &&
+                ev.keyCode === $.ui.keyCode.ENTER &&
+                this._controller_base
+            ) {
+                const handler = this._controller_base._onDocumentKeyDown;
+                if (handler) {
                     ev.stopPropagation();
-                    this._controller_base._onDocumentKeyDown(ev);
+                    handler.call(this._controller_base, ev);
+                    return;
                 }
-            } else {
-                this._super.apply(this, arguments);
             }
+            this._super.apply(this, arguments);
         },
     });
 });
